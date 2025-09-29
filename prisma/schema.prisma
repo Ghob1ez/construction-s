@@ -10,10 +10,12 @@ datasource db {
 
 model Project {
   id             String   @id @default(cuid())
-  siteAddress    String
-  projectType    String
+  siteAddress    String?          // <- OPTIONAL
+  projectType    String?          // <- OPTIONAL
   sizeStoreys    Int?
   budgetBand     String?
   targetTimeline DateTime?
   createdAt      DateTime @default(now())
+
+  @@map("Project")
 }
