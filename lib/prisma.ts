@@ -1,21 +1,31 @@
 // lib/prisma.ts
 import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-// Disable prepared statements for Supabase pooler
-const prismaClient = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL
-        ? process.env.DATABASE_URL + "?pgbouncer=true&connection_limit=1&pool_timeout=0"
-        : undefined,
-    },
-  },
-});
+function withPoolerParams(url: string) {
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}pgbouncer=true&connection_limit=1&pool_timeout=0`;
+}
 
-export const prisma = globalForPrisma.prisma || prismaClient;
+const prismaClient =
+  globalForPrisma.prisma ??
+  (() => {
+    const url = process.env.DATABASE_URL;
+
+    // ✅ Only override the datasource URL if we actually have one
+    if (url) {
+      return new PrismaClient({
+        datasources: { db: { url: withPoolerParams(url) } },
+      });
+    }
+
+    // ✅ Otherwise, construct normally (Prisma will read from env at runtime)
+    return new PrismaClient();
+  })();
+
+export const prisma = prismaClient;
 
 if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+  globalForPrisma.prisma = prismaClient;
 }
