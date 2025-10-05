@@ -2,9 +2,9 @@
 export type ZoningPayload = {
   zoneCode?: string;
   council?: string;
-  maxHeightM?: number;
-  fsr?: number;
-  minLotSizeSqm?: number;
+  maxHeightM?: number;   // metres
+  fsr?: number;          // ratio
+  minLotSizeSqm?: number;// m²
 };
 
 export async function fetchZoningByAddress(_address: string): Promise<ZoningPayload> {

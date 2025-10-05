@@ -10,9 +10,15 @@ export async function syncLotForProject(params: { projectId: string; address: st
 
   // 2) find/create Lot by address (works even without @unique)
   const existing = await prisma.lot.findFirst({ where: { address } });
+
   const lot = existing
-    ? await prisma.lot.update({ where: { id: existing.id }, data: { address, ...zoning } })
-    : await prisma.lot.create({ data: { address, ...zoning } });
+    ? await prisma.lot.update({
+        where: { id: existing.id },
+        data: { address, ...zoning },
+      })
+    : await prisma.lot.create({
+        data: { address, ...zoning },
+      });
 
   // 3) link Project → Lot
   await prisma.project.update({
