@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run migrate:deploy && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "migrate:deploy": "prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
