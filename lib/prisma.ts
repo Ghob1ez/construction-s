@@ -1,14 +1,21 @@
 // lib/prisma.ts
 import { PrismaClient } from "@prisma/client";
 
-declare global {
-  // allow global var in dev (hot-reload)
-  // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined;
-}
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-export const prisma = global.prisma ?? new PrismaClient();
+// Disable prepared statements for Supabase pooler
+const prismaClient = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+        ? process.env.DATABASE_URL + "?pgbouncer=true&connection_limit=1&pool_timeout=0"
+        : undefined,
+    },
+  },
+});
+
+export const prisma = globalForPrisma.prisma || prismaClient;
 
 if (process.env.NODE_ENV !== "production") {
-  global.prisma = prisma;
+  globalForPrisma.prisma = prisma;
 }

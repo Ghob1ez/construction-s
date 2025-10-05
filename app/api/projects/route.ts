@@ -1,8 +1,9 @@
 // app/api/projects/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
+import { syncLotForProject } from "../../../lib/lotSync";
 
-// Debug once per process: which DB URL are we using?
+// (optional) debug DB URL once per process
 (() => {
   try {
     const u = new URL(process.env.DATABASE_URL || "");
@@ -18,7 +19,7 @@ import { prisma } from "../../../lib/prisma";
 
 export const runtime = "nodejs";
 
-// Helpers: coerce and sanitize
+// Helpers
 function str(v: unknown): string | null {
   return typeof v === "string" && v.trim() ? v.trim() : null;
 }
@@ -37,12 +38,13 @@ function date(v: unknown): Date | null {
   return null;
 }
 
-// --- GET: always return an array ---
+// --- GET: list latest projects ---
 export async function GET() {
   try {
     const rows = await prisma.project.findMany({
       orderBy: { createdAt: "desc" },
       take: 50,
+      include: { lot: true },
     });
     return NextResponse.json(rows ?? [], { status: 200 });
   } catch (err) {
@@ -51,7 +53,7 @@ export async function GET() {
   }
 }
 
-// --- POST: coerce and insert ---
+// --- POST: create project + auto-sync lot ---
 export async function POST(req: Request) {
   try {
     const b = (await req.json()) as Record<string, unknown>;
@@ -60,6 +62,14 @@ export async function POST(req: Request) {
     const siteAddress = str(b.siteAddress ?? b.name);
     const projectType = str(b.projectType ?? b.description);
 
+    if (!siteAddress) {
+      return NextResponse.json(
+        { error: "siteAddress is required" },
+        { status: 400 }
+      );
+    }
+
+    // 1) create project
     const created = await prisma.project.create({
       data: {
         siteAddress,
@@ -70,7 +80,16 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(created, { status: 201 });
+    // 2) sync Lot (create or update by address) and link project.lotId
+    await syncLotForProject({ projectId: created.id, address: siteAddress });
+
+    // 3) return hydrated project WITH lot
+    const full = await prisma.project.findUnique({
+      where: { id: created.id },
+      include: { lot: true },
+    });
+
+    return NextResponse.json(full, { status: 201 });
   } catch (err: any) {
     const message =
       (typeof err?.message === "string" && err.message) ||
@@ -81,7 +100,6 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error: message,
-        // include stack only in dev for clarity
         stack: process.env.NODE_ENV !== "production" ? err?.stack ?? null : null,
       },
       { status: 500 }
