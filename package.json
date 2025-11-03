@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "postinstall": "prisma generate",
-    "prisma:deploy": "prisma migrate deploy",
-    "deploy": "git add . && git commit -m 'deploy' || echo 'Nothing to commit' && git push && echo '\n🚀  Build triggered on Vercel...'"
+    "prebuild": "prisma migrate deploy",
+    "prisma:deploy": "prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
