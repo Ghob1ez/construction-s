@@ -9,31 +9,31 @@ datasource db {
 }
 
 model Project {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   siteAddress    String?
   projectType    String?
   sizeStoreys    Int?
   budgetBand     String?
   targetTimeline DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
-  lotId String?   // FK column
-  lot   Lot?      @relation(fields: [lotId], references: [id])
+  lotId String? // FK column
+  lot   Lot?    @relation(fields: [lotId], references: [id])
 
   @@map("Project")
 }
 
 model Lot {
-  id             String   @id @default(cuid())
-  address        String   @unique
-  zoneCode       String?
-  council        String?
-  lat            Decimal? @db.Decimal(9,6)
-  lng            Decimal? @db.Decimal(9,6)
-  maxHeightM     Decimal? @db.Decimal(6,2)
-  fsr            Decimal? @db.Decimal(5,2)
-  minLotSizeSqm  Int?
-  createdAt      DateTime @default(now())
+  id            String   @id @default(cuid())
+  address       String   @unique
+  zoneCode      String?
+  council       String?
+  lat           Decimal? @db.Decimal(9, 6)
+  lng           Decimal? @db.Decimal(9, 6)
+  maxHeightM    Decimal? @db.Decimal(6, 2)
+  fsr           Decimal? @db.Decimal(5, 2)
+  minLotSizeSqm Int?
+  createdAt     DateTime @default(now())
 
   // 👇 reverse relation (important!)
   projects Project[]

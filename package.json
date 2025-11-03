@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "postinstall": "prisma generate",
-    "migrate:deploy": "prisma migrate deploy",
+    "prisma:deploy": "prisma migrate deploy",
     "deploy": "git add . && git commit -m 'deploy' || echo 'Nothing to commit' && git push && echo '\n🚀  Build triggered on Vercel...'"
   },
   "dependencies": {
